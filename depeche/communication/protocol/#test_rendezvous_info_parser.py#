@@ -1,0 +1,22 @@
+"""
+Unit test for parsing and file creation functions
+"""
+
+import unittest
+
+from depeche.protocol.rendezvous_info import RendezvousInfo
+from depeche.protocol import rendezvous_info_parser
+
+class TestRendezvousInfoParser(unittest.TestCase):
+    "Tests for info parser"
+
+    def test_file_operations(self):
+        """Tests wether parse functions are commutative"""
+
+        to_format = RendezvousInfo("a_typical_alias", ["123", "234"], "-- PUBLIC KEY --")
+        file_contents = rendezvous_info_parser.produce_file(to_format)
+
+        parse_result = rendezvous_info_parser.parse_file(file_contents)
+
+        self.assertEqual(to_format.alias, parse_result.alias)
+        self.assertEqual(to_format.public_key, parse_result.public_key)

@@ -1,0 +1,109 @@
+================================
+Technical information on depeche
+================================
+
+
+Introduction
+============
+
+depeche is, at heart, a store-and-forward messaging system.
+The messages are wrapped in PGP encryption to ensure privacy,
+as messages will pass nodes under control of many different
+persons.
+
+The system employs a flood-fill method, meaning that each
+message will be passed to many nodes that are not interested
+in them, before possibly reaching the intended adressee.
+
+To enhance privacy and to make traffic analysis harder,
+recipient addresses are taken from a one-time pad that the
+intended recipient has generated and distributed.
+
+Also included in the protocol are various measures to mitigate
+denial-of-service attacks on the network, described under the
+section "Voice server".
+
+
+Nomenclature
+============
+
+In order to describe the system, a number of key terms need
+to be defined.
+
+* Node - A device running a program that implements depeche
+* Message exchange - The act of mutually forwarding messages
+        among two peers. This is the most common operation
+        performed by a node.
+* Rendezvous - A node-to-node transfer of contact details.
+        A user needs to perform at least one rendezvous to
+        have their public key and address pad be known to
+        others.
+* Control message - A message containing protocol-specific
+        data, such as contact details, voice server tickets,
+        additional address pads etc.
+* Transfer mechanism - A way to connect two nodes. depeche
+        itself is agnostic to the transfer mechanism used,
+        it is very much an application layer protocol.
+
+
+Addressing
+==========
+
+One-time addresses
+------------------
+
+Few-times keys
+--------------
+
+Rendezvous
+==========
+
+
+Message format
+==============
+
+Messages are legal JSON files. These are transmitted in
+an all-or-nothing fashion. Any protocol implemented
+on top of depeche may split content across messages for
+convenience, weighing the risk of partial delivery against
+the risk of premature dropping by nodes of large messages.
+
+[Message format details]
+
+
+Transfer mechanisms and Communication adapters
+==============================================
+
+In the designing of depeche, thought has been given to
+making it independent of underlying communication protocols.
+
+An example of potential transfer mechanisms:
+
+* Ethernet (TCP/UDP)
+* Internet (TCP/IP)
+* Bluetooth (Bt)
+* Near Field Communication (NFC)
+* IrDA
+* FM-radio
+* Dialup (modem)
+* "69" audio modem
+* Screen+Camera barcode interchange
+
+Since depeche is meant to be used across different transfer
+mechanisms, each mechanism needs (at least) one adapter
+protocol.
+
+The protocols will differ somewhat, depending on wether
+the mechanism is simplex/duplex, stream/file, one-way or
+pre-negotiated. In order for different implementations to
+communicate over a given transfer mechanism, sub-protocol
+specs will need to be crafted.
+
+A spec for the "naïve local network"-adapter is delivered
+as a part of the initial specification. This is meant
+to be a starting point of future adapter protocols, by no
+means a set-in-stone-standard.
+
+
+Voice server
+============

@@ -1,0 +1,92 @@
+=======================================
+Depeche - An non-technical introduction
+=======================================
+
+
+What is it?
+===========
+
+Depeche is a protocol, not a program. Various programs can implement
+the protocol, and if they do it right, they'll all coexist nicely.
+
+The Depeche protocol is a method to send messages without needing
+working internet. Both sender and recipient are anonymous and the
+message content remains secret. Sounds wonderful, no? There are
+drawbacks, chiefly among those is that message delivery may take
+a long time. In fact, message delivery is not assured at all.
+
+It works by having messages jump between devices of users of the
+protocol, or "nodes" in protocol lingo. Each node stores a number of
+messages it may forward when it comes into contact with another node.
+
+Nodes are thought to be primarily personal computers, tablets and
+smartphones due to processor power needs and available storage, but
+other devices might be made to work, such as routers, smartwatches,
+network storage devices etc.
+
+
+What purpose does it serve?
+===========================
+
+It can serve several purposes, but primarily it's designed to be a
+"replacement network" when normal networks (phone, internet) are
+somehow compromised - Either by accident (earthquake, zombie
+apocalypse etc.) or by deliberate action (government shutdown,
+severe persecution etc.)
+
+Due to the slow delivery times and possible non-delivery of messages
+it will not compete with any current systems - for most people,
+normal email will be a far better alternative in almost all cases.
+
+
+Who is it for?
+==============
+
+It has been constructed with extreme redundancy in mind. This means
+that a certain set of people will be initially interested:
+
+* Military - Message forwarding even when normal communication is
+        interrupted. This also extends to military organisations
+        that do not control the local telecom infrastructure, such
+        as in civil conflicts.
+
+* Aid workers - Having messages reach remote locations where normal
+        modes of communications have failed to penetrate. Should
+        the aid workers be travelling, they can also be used as
+        replacement mail-men for locals otherwise cut off from
+        outside areas.
+
+* Emergency response teams - In areas where communication has not
+        yet been restored. ERTs, being mobile, can also forward
+        messages between locals affected by disaster and help them
+        re-establish contact or at least have proof-of-life.
+
+* Dissidents - People opposing repressive governments who monitor
+        normal channels of communication. In some instances, such
+        governments have resorted to entirely shutting down
+        communications infrastucture. Depeche helps counter this
+        to some extent.
+
+
+What is needed to run it?
+=========================
+
+The baseline is a smartphone. If you have access to one, you'll be
+able to run an application that implements Depeche. As phones are
+mobile, they make the ideal Depeche node - As they move around, they
+may encounter many other nodes, spreading the messages far and wide.
+
+
+Caveat emptor
+=============
+
+Depeche is build upon the OpenPGP standard for encrypted mail
+exchange. As such, it has a strong foundation, but no software of
+decent size is completely without flaw. Likewise, the clients
+implementing the Depeche protocol may themselves be vulnerable to
+attack. As such, engagning in activity that is actively opposed
+will still carry a risk.
+
+Depeche comes with no warranty. Should you end up serving time in
+a North Korean gulag for contra revolutionary activities, the
+creators of Depeche will not bust you out.
