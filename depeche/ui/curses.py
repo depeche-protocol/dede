@@ -1,6 +1,6 @@
 """
-This is the main file for the curses terminal interface - It collects the various
-commands that can be issued to your depeche client
+This is the main file for the curses terminal interface - It collects the
+various commands that can be issued to your depeche client
 """
 import uuid
 import copy
@@ -48,12 +48,14 @@ class _MenuItem:
 
 
 class _MIME:
-    def construct_top_level_mime_message(to_header: str, from_header: str, body_text: str,
-                                          attachments: []) -> EmailMessage:
+    def construct_top_level_mime_message(to_header: str, from_header: str,
+                                         body_text: str,
+                                         attachments: []) -> EmailMessage:
         """
-        This method will construct a "standard" MIME message - A multipart message where
-        the body text is the first part and possible protocol attachments are added after.
-        Please note that the argument "attachments" should contain EmailMessage objects only.
+        This method will construct a "standard" MIME message - A multipart
+        message where the body text is the first part and possible protocol
+        attachments are added after. Please note that the argument "attachments"
+        should contain EmailMessage objects only.
         """
         # Make sure that the file contents are crammed into a MIME container
         msg = EmailMessage()
@@ -434,8 +436,9 @@ class CursesInterface:
         suplied, the user is again prompted for when to start the rendezvous. When
         the user so indicates (on press of "Enter") the rendezvous sequence will
         start.
-        TODO: On successful rendezvous, the user should be prompted for an alias for the
-        new contact. Currently, the alias used is always what the foreign node gives
+        TODO: On successful rendezvous, the user should be prompted for an alias for
+        the new contact. Currently, the alias used is always what the foreign node
+        gives which might not be what the user wants
         """
         # Set status
         self._status = "Rendezvous setup"
@@ -746,8 +749,7 @@ class CursesInterface:
         self._active_menu = _Menu("Operation in progress...", [])
         self._redraw()
         self._adapter.start_message_exchange_server(self._get_messages_to_send,
-                                                        self._on_message_received,
-                                                        timeout = 30)
+                                                    self._on_message_received)
         self._is_listening_active = True
 
         # Passively listen

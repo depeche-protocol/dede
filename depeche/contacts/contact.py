@@ -4,6 +4,7 @@ the depeche system. It handles address pads (both own and external)
 as well as interfaces with the gpg DB for key retrieval etc.
 """
 
+
 class Contact:
     """Collector for funtionality concerning known contacts"""
 
@@ -11,6 +12,7 @@ class Contact:
         self._nickname = None
         self._alias = None
         self._contact_id = None
+        self._created_at = None
 
     @property
     def contact_id(self):
@@ -35,6 +37,14 @@ class Contact:
     @alias.setter
     def alias(self, to_set: str):
         self._alias = to_set
+
+    @property
+    def created_at(self):
+        return self._created_at
+
+    @created_at.setter
+    def created_at(self, to_set: str):
+        self._created_at = to_set
 
     @property
     def address_pad(self) -> list:

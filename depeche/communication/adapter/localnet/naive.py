@@ -17,7 +17,6 @@ import time
 
 from queue import Queue
 
-import socketserver
 from socketserver import TCPServer
 from socketserver import BaseRequestHandler
 
@@ -36,6 +35,7 @@ DEFAULT_UDP_BROADCAST_PORT = 27272
 DEFAULT_TCP_EXCHANGE_SERVER_PORT = 27272
 DEFAULT_TCP_RENDEZVOUS_SERVER_PORT = 27273
 DEFAULT_BUF_SIZE = 8192
+
 
 def _send_udp_broadcast(contents,
                         port=DEFAULT_UDP_BROADCAST_PORT):
@@ -93,7 +93,7 @@ def _read_announcement_from_socket(sock, server_type="rendezvous"):
         raise ValueError("Broadcast does not conform to expectations")
 
 
-def _validate_announcement(broadcast_str: str, server_type: str="rendezvous") -> bool:
+def _validate_announcement(broadcast_str: str, server_type: str = "rendezvous") -> bool:
     """
     Will validate wether an announcement heard over the local net.
     If it is a valid (and interesting) announcement True is returned,
@@ -103,15 +103,17 @@ def _validate_announcement(broadcast_str: str, server_type: str="rendezvous") ->
 
     # Check for validity and protocol+version
     if broadcast["protocol"] == "depeche_ipadapter" and \
-      broadcast["version"] == 0 and \
-      broadcast["operation"] == "server_announcement" and \
-      broadcast["content"]["server_type"] == server_type and \
-      broadcast["content"]["server_port"] > 0:
+       broadcast["version"] == 0 and \
+       broadcast["operation"] == "server_announcement" and \
+       broadcast["content"]["server_type"] == server_type and \
+       broadcast["content"]["server_port"] > 0:
         return True
     else:
         return False
 
-def _create_socket_server(handler: BaseRequestHandler, base_port: int, max_port_offset: int=10) -> TCPServer:
+
+def _create_socket_server(handler: BaseRequestHandler, base_port: int,
+                          max_port_offset: int = 10) -> TCPServer:
     """
     Convenience method for starting a TCP socket server, selecting an open
     port based on the initial port given. If no open socket can be found on which to
@@ -133,7 +135,7 @@ def _create_socket_server(handler: BaseRequestHandler, base_port: int, max_port_
                 raise
 
     # Another one of those "this should not happen" scenarios that are bound to happen
-    raise AppError("Reached faulty state when trying to start socket server")
+    raise Exception("Reached faulty state when trying to start socket server")
 
 
 def _message_exchange_loop(sock, messages_array,
@@ -160,10 +162,10 @@ def _message_exchange_loop(sock, messages_array,
     while keep_sending or keep_receiving:
 
         keep_sending, keep_receiving = \
-          _receive_messages(sock, keep_sending, keep_receiving, on_message_received)
+            _receive_messages(sock, keep_sending, keep_receiving, on_message_received)
 
         keep_sending, keep_receiving = \
-          _send_messages(sock, keep_sending, keep_receiving, messages_to_send)
+            _send_messages(sock, keep_sending, keep_receiving, messages_to_send)
 
 
 def _receive_messages(sock, keep_sending, keep_receiving,
@@ -201,7 +203,7 @@ def _send_messages(sock, keep_sending, keep_receiving, messages_to_send):
 
     if keep_sending:
         outgoing_message = next(messages_to_send, None)
-        if not outgoing_message is None:
+        if outgoing_message is not None:
             logger.debug("Sending message: " + str(outgoing_message))
             outgoing_container = MessageContainer([outgoing_message])
         else:
@@ -232,7 +234,6 @@ class TcpUdpAdapter:
                        "depeche protocol."
     }
 
-
     def __init__(self, crypto_provider: ProviderNaCl,
                  rendezvous_server_port=DEFAULT_TCP_RENDEZVOUS_SERVER_PORT):
         self.provider = crypto_provider
@@ -240,7 +241,6 @@ class TcpUdpAdapter:
         self.exchange_server_thread = None
         self.exchange_listener_thread = None
         self._callsign = str(uuid.uuid4())
-
 
     def start_register_announcements(self, on_announcement: callable,
                                      port: int=DEFAULT_UDP_BROADCAST_PORT,
@@ -252,10 +252,9 @@ class TcpUdpAdapter:
         information.
         """
         self.exchange_listener_thread = \
-          self._ExchangeAnnouncementListener(on_announcement, port, timeout)
+            self._ExchangeAnnouncementListener(on_announcement, port, timeout)
 
         self.exchange_listener_thread.start()
-
 
     class _ExchangeAnnouncementListener(threading.Thread):
         """
@@ -266,7 +265,7 @@ class TcpUdpAdapter:
         to the announced server should be made.
         """
         def __init__(self, on_announcement: callable, port=DEFAULT_UDP_BROADCAST_PORT,
-                     timeout: int=None, own_callsign: str=None):
+                     timeout: int = None, own_callsign: str = None):
             self.on_announcement = on_announcement
             self.port = port
             self.done = False
@@ -275,10 +274,8 @@ class TcpUdpAdapter:
 
             threading.Thread.__init__(self)
 
-
         def run(self):
             self.listen()
-
 
         def listen(self):
             """Listens for server broadcasts and calls callback"""
@@ -294,7 +291,8 @@ class TcpUdpAdapter:
                 start = time.time()
                 while not self.done:
                     try:
-                        ip_number, port, callsign =_read_announcement_from_socket(my_socket, "exchange")
+                        ip_number, port, callsign = \
+                            _read_announcement_from_socket(my_socket, "exchange")
                         if callsign == self.own_callsign:
                             logger.debug("Picked up my own announcement. Disregarding it.")
                         else:
@@ -311,23 +309,22 @@ class TcpUdpAdapter:
                                      "Continuing listening.".format(err))
                 logger.debug("Announcement listener stopped")
 
-
     def stop_register_announcements(self):
         """
         Will cause cessation of listening to announcements from peer
         nodes running servers.
         """
-        if not self.exchange_listener_thread is None:
+        if self.exchange_listener_thread is not None:
             self.exchange_listener_thread.done = True
             self.exchange_listener_thread.join()
-
 
     def start_message_exchange_server(self,
                                       get_messages_to_send: callable,
                                       on_message_received: callable,
-                                      port: int=DEFAULT_TCP_EXCHANGE_SERVER_PORT,
-                                      run_once_and_stop: bool=True,
-                                      timeout: int=30):
+                                      on_exchange_completed: callable = None,
+                                      port: int = DEFAULT_TCP_EXCHANGE_SERVER_PORT,
+                                      run_once_and_stop: bool = True,
+                                      timeout: int = 30):
         """
         This is the "active" way to find peers - It sets up a server
         and announces its presence on the local network. As such it
@@ -344,18 +341,19 @@ class TcpUdpAdapter:
         server_status_queue = Queue()
 
         self.exchange_server_thread = \
-          self._MessageExchangeServer(server_status_queue,
-                                      get_messages_to_send,
-                                      on_message_received,
-                                      port)
+            self._MessageExchangeServer(server_status_queue,
+                                        get_messages_to_send,
+                                        on_message_received,
+                                        on_exchange_completed,
+                                        port)
 
         self.exchange_server_thread.start()
 
         try:
-            status = server_status_queue.get(timeout = 30) # Make sure that the port is open before
-                                                           # announcing it
+            status = server_status_queue.get(timeout=30)  # Make sure that the port is open before
+                                                          # announcing it
 
-            # Due to dynamoc port selection, we need to keep tabs of what was actually selected
+            # Due to dynamic port selection, we need to keep tabs of what was actually selected
             (_, selected_port) = self.exchange_server_thread.server.server_address
 
             if status != "RUNNING":
@@ -365,12 +363,10 @@ class TcpUdpAdapter:
             logger.error("Error whilst starting message exchange server")
             return
 
-
         _send_server_announcment("exchange", selected_port, self._callsign)
         if run_once_and_stop:
             self.exchange_server_timer = threading.Timer(timeout, self.stop_message_exchange_server)
             self.exchange_server_timer.start()
-
 
     class _MessageExchangeServer(threading.Thread):
         """
@@ -381,16 +377,17 @@ class TcpUdpAdapter:
                      queue: Queue,
                      get_messages_callback: callable,
                      on_message_received: callable,
+                     on_exchange_completed: callable,
                      port=DEFAULT_TCP_EXCHANGE_SERVER_PORT):
             self.queue = queue
             self.done = False
             self.get_messages_callback = get_messages_callback
             self.on_message_received = on_message_received
+            self.on_exchange_completed = on_exchange_completed
             self.port = port
             self.server = None
 
             threading.Thread.__init__(self)
-
 
         def run(self):
             """
@@ -405,6 +402,7 @@ class TcpUdpAdapter:
             self.server.timeout = 0.2
             self.server.get_messages_callback = self.get_messages_callback
             self.server.on_message_received = self.on_message_received
+            self.server.on_exchange_completed = self.on_exchange_completed
 
             # Signal that we are now handlng requests
             self.queue.put("RUNNING")
@@ -417,7 +415,6 @@ class TcpUdpAdapter:
             # Signal that we are done and no longer handling requests
             self.queue.put("STOPPED")
             logger.debug("Message exchange server shut down on request.")
-
 
         class _ExchangeHandler(BaseRequestHandler):
             def handle(self):
@@ -432,8 +429,9 @@ class TcpUdpAdapter:
                 _message_exchange_loop(sock,
                                        messages_to_send,
                                        self.server.on_message_received)
-    #END _MessageExchangeServer
-
+                if self.server.on_exchange_completed is not None:
+                    self.server.on_exchange_completed()
+    # END _MessageExchangeServer
 
     def stop_message_exchange_server(self):
         """
@@ -447,7 +445,6 @@ class TcpUdpAdapter:
             self.exchange_server_thread.done = True
             self.exchange_server_thread.join()
 
-
     def exchange_messages_with_server(self, destination: (str, int),
                                       messages, on_message_received):
         """
@@ -460,9 +457,8 @@ class TcpUdpAdapter:
         _message_exchange_loop(sock, messages, on_message_received, True)
         sock.close()
 
-
     def rendezvous(self, shared_secret, rendezvous_info,
-                   timeout: int=30):
+                   timeout: int = 30):
         """
         This will initiate a rendezvous with the a peer broadcasting
         under a given callsign.
@@ -489,17 +485,17 @@ class TcpUdpAdapter:
             rendezvous_done.set()
 
         port_listener_thread = \
-          self._RendezvousServer(queue,
-                                 shared_secret,
-                                 rendezvous_info,
-                                 self.provider,
-                                 callback,
-                                 self.rendezvous_server_port,
-                                 timeout)
+            self._RendezvousServer(queue,
+                                   shared_secret,
+                                   rendezvous_info,
+                                   self.provider,
+                                   callback,
+                                   self.rendezvous_server_port,
+                                   timeout)
 
         port_listener_thread.start()
 
-        status = queue.get() # Make sure that the port listener is up before announcing it
+        status = queue.get()  # Make sure that the port listener is up before announcing it
         if status == "FAIL":
             logger.error("Rendezvous server could not be started")
             return (False, None)
@@ -509,11 +505,11 @@ class TcpUdpAdapter:
         _send_server_announcment("rendezvous", port_listener_thread.port, self._callsign)
 
         announcement_listener_thread = \
-          self._RendezvousAnnouncementListener(shared_secret,
-                                               rendezvous_info,
-                                               self.provider,
-                                               callback,
-                                               timeout)
+            self._RendezvousAnnouncementListener(shared_secret,
+                                                 rendezvous_info,
+                                                 self.provider,
+                                                 callback,
+                                                 timeout)
 
         announcement_listener_thread.start()
 
@@ -534,7 +530,6 @@ class TcpUdpAdapter:
             announcement_listener_thread.done = True
         return result
 
-
     class _RendezvousAnnouncementListener(threading.Thread):
         """
         This thread will listen for rendezvous server announcements.
@@ -548,7 +543,7 @@ class TcpUdpAdapter:
                      own_info: RendezvousInfo,
                      crypto_provider: ProviderNaCl,
                      callback,
-                     timeout: int=None):
+                     timeout: int = None):
             self.shared_secret = shared_secret
             self.own_rendezvous_info = own_info
             self.provider = crypto_provider
@@ -559,10 +554,8 @@ class TcpUdpAdapter:
 
             threading.Thread.__init__(self)
 
-
         def run(self):
             self.listen()
-
 
         def listen(self):
             """Listens for server broadcasts and initiates rendezvous"""
@@ -595,7 +588,6 @@ class TcpUdpAdapter:
                                      "Continuing listening.".format(err))
                 self.on_rendezvous_complete()
 
-
         def initiate_rendezvous(self, address, port):
             """Initates rendezvous and invokes callback on success"""
             logger.debug("Initiating rendezvous with {}:{}".format(address, port))
@@ -615,8 +607,7 @@ class TcpUdpAdapter:
 
             self.done = True
             self.result = (True, other_rendezvous_info)
-    #END _AnnouncementListener
-
+    # END _AnnouncementListener
 
     class _RendezvousServer(threading.Thread):
         """
@@ -634,7 +625,7 @@ class TcpUdpAdapter:
                      crypto_provider: ProviderNaCl,
                      callback,
                      port=DEFAULT_TCP_RENDEZVOUS_SERVER_PORT,
-                     timeout: int=None):
+                     timeout: int = None):
 
             self.queue = queue
             self.shared_secret = shared_secret
@@ -647,7 +638,6 @@ class TcpUdpAdapter:
             self.timeout = timeout
 
             threading.Thread.__init__(self)
-
 
         def run(self):
             """
@@ -711,7 +701,6 @@ class TcpUdpAdapter:
             self.queue.put("STOPPED")
             self.callback()
 
-
         class _RendezvousHandler(BaseRequestHandler):
             def handle(self):
                 # self.request is the TCP socket connected to the client
@@ -719,17 +708,17 @@ class TcpUdpAdapter:
                 data = bytebundle.read(sock)
                 payload = data.decode("utf-8")
                 decrypted_payload = \
-                  self.server.provider.decrypt_symmetric(payload, self.server.shared_secret)
+                    self.server.provider.decrypt_symmetric(payload, self.server.shared_secret)
 
                 rendezvous_info = RendezvousInfo.deserialize(decrypted_payload)
 
                 info_str = self.server.own_rendezvous_info.serialize()
                 encrypted_info_str = \
-                  self.server.provider.encrypt_symmetric(info_str, self.server.shared_secret)
+                    self.server.provider.encrypt_symmetric(info_str, self.server.shared_secret)
 
                 bytebundle.send(encrypted_info_str.encode("utf-8"), sock)
 
                 self.server.done = True
                 self.server.result = (True, rendezvous_info)
-            #END _RendezvousHandler
-        #END _RendezvousServer
+            # END _RendezvousHandler
+        # END _RendezvousServer

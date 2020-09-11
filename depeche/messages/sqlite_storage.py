@@ -185,10 +185,10 @@ class SqliteStorage:
         message_id = hashlib.sha256(message.contents.encode()).hexdigest()
         try:
             self._get_conn().execute("INSERT INTO message VALUES(?,datetime('now'),datetime('now'),0,?,?,?)",
-                                (message_id,
-                                    message.to_address,
-                                    message.send_time,
-                                message.contents))
+                                     (message_id,
+                                      message.to_address,
+                                      message.send_time,
+                                      message.contents))
             self._get_conn().commit()
         except sqlite3.IntegrityError:
             self._logger.info("Message already exists in DB: {0}".format(message_id))
@@ -373,10 +373,10 @@ class SqliteStorage:
         is highly scarce (mobile battery running out perhaps?)
         """
         self._get_conn().execute("INSERT INTO own_address VALUES(?,?,?,?)",
-                           (address,
-                            contact_id,
-                            key_id,
-                            False))
+                                 (address,
+                                  contact_id,
+                                  key_id,
+                                  False))
         self._get_conn().commit()
 
 
@@ -410,10 +410,10 @@ class SqliteStorage:
         """
         key_id = str(uuid.uuid4())
         self._get_conn().execute("INSERT INTO nacl_key VALUES(?,?,?,?)",
-                           (key_id,
-                            False,
-                            None,
-                            public_key))
+                                 (key_id,
+                                  False,
+                                  None,
+                                  public_key))
         self._get_conn().commit()
         return key_id
 
@@ -423,11 +423,11 @@ class SqliteStorage:
         Stores an address of a foreign node and binds it to a key that
         should be used to encrypt the message sent to the contact address.
         """
-        self._get_conn().execute("INSERT INTO foreign_address VALUES(?,?,?,?)",
-                           (address,
-                            contact_id,
-                            key_id,
-                            False))
+        self._get_conn().execute("REPLACE INTO foreign_address VALUES(?,?,?,?)",
+                                 (address,
+                                  contact_id,
+                                  key_id,
+                                  False))
         self._get_conn().commit()
 
 
@@ -437,8 +437,8 @@ class SqliteStorage:
         for some time, as they might be used in resends of the message.
         """
         self._get_conn().execute("UPDATE foreign_address SET is_used = ? WHERE id = ?",
-                           (True,
-                            address_id))
+                                 (True,
+                                  address_id))
         self._get_conn().commit()
 
 
@@ -448,21 +448,21 @@ class SqliteStorage:
         If there are no unused addresses leading to the contact, an empty list is returned.
         """
         curs = self._get_conn().cursor()
-        if size == None:
+        if size is None:
             curs.execute("SELECT fa.id, fa.key_id, nacl_key.public_key "
-                        "FROM foreign_address AS fa "
-                        "JOIN nacl_key ON fa.key_id = nacl_key.id "
-                        "WHERE fa.contact_id = ? "
-                        "AND fa.is_used = ?",
-                        (contact_id, False))
+                         "FROM foreign_address AS fa "
+                         "JOIN nacl_key ON fa.key_id = nacl_key.id "
+                         "WHERE fa.contact_id = ? "
+                         "AND fa.is_used = ?",
+                         (contact_id, False))
         else:
             curs.execute("SELECT fa.id, fa.key_id, nacl_key.public_key "
-                        "FROM foreign_address AS fa "
-                        "JOIN nacl_key ON fa.key_id = nacl_key.id "
-                        "WHERE fa.contact_id = ? "
-                        "AND fa.is_used = ? "
-                        "LIMIT ?",
-                        (contact_id, False, size))
+                         "FROM foreign_address AS fa "
+                         "JOIN nacl_key ON fa.key_id = nacl_key.id "
+                         "WHERE fa.contact_id = ? "
+                         "AND fa.is_used = ? "
+                         "LIMIT ?",
+                         (contact_id, False, size))
         result = []
         for row in curs:
             result.append(contact.Address(row[0], row[1], public_key=row[2]))
@@ -496,7 +496,7 @@ class SqliteStorage:
         # TODO: Check for existence of nickname - SHOULD be unique
         contact_id = str(uuid.uuid4())
         self._get_conn().execute("INSERT INTO contact VALUES(?,?,?,datetime('now'),datetime('now'))",
-                           (contact_id, nickname, alias))
+                                 (contact_id, nickname, alias))
         self._get_conn().commit()
         return contact_id
 
@@ -523,6 +523,7 @@ class SqliteStorage:
             result.contact_id = row["id"]
             result.nickname = row["nickname"]
             result.alias = row["alias"]
+            result.created_at = row["created_at"]
         return result
 
 
@@ -543,6 +544,7 @@ class SqliteStorage:
             result.contact_id = row["id"]
             result.nickname = row["nickname"]
             result.alias = row["alias"]
+            result.created_at = row["created_at"]
         return result
 
 
@@ -561,6 +563,7 @@ class SqliteStorage:
             c.contact_id = row["id"]
             c.nickname = row["nickname"]
             c.alias = row["alias"]
+            c.created_at = row["created_at"]
             result.append(c)
         return result
 

@@ -4,15 +4,12 @@ Examples of which: Requests for more addresses and resulting outbound address pa
 requests and replies, third-party introductions, self-introductions.
 """
 
-import uuid
 import json
 
-from email import policy
 from email.message import EmailMessage
-from email.parser import BytesParser, Parser
 
 
-## Some strings that need to be the same all over the place
+# Some strings that need to be the same all over the place
 address_pad_request_description = 'depeche/address_pad_request'
 address_pad_description = 'depeche/address_pad'
 

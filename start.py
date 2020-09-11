@@ -5,7 +5,8 @@ This is a technology demonstrator for the depeche protocol, it is not
 meant for use in a hostile environment, as it makes no special
 provisions for destroying password buffers or... anything really.
 
-Please note that running this in a generic context reuires a number of dependencies:
+Please note that running this in a generic context reuires a number of
+dependencies:
 
 * sqlite
 * pynacl
@@ -19,8 +20,10 @@ import argparse
 import configparser
 
 import depeche.ui.curses as curses
+import depeche.ui.wx.wx as wxui
 
 DEFAULT_CONFIG_FILE_NAME = os.path.expanduser("~") + "/.depeche/depeche.config"
+
 
 def main(args):
     """
@@ -37,7 +40,9 @@ def main(args):
         log_file_path = "ddep.log"
     logging.basicConfig(filename=log_file_path, level=args.log_level)
 
-    curses.CursesInterface.main_screen_turn_on(conf)
+    #curses.CursesInterface.main_screen_turn_on(conf)
+    wxui.MainFrame.main_screen_turn_on(conf)
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -58,6 +63,7 @@ def get_args():
 
     args = parser.parse_args()
     return args
+
 
 if __name__ == "__main__":
     args = get_args()
